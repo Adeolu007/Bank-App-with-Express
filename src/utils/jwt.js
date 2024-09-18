@@ -13,7 +13,8 @@ function authJwt(){
     }).unless({
         path: [
             '/api/v1/users/login', 
-            '/api/v1/users'
+            '/api/v1/users',
+            '/api/v1/users/gmail'
         ]
     });
     async function isRevoked(req, payload, done) {

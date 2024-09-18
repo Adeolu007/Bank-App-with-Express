@@ -10,6 +10,97 @@ const TransferDTO = require('../dtos/TransferDTO');
 const bcrypt = require('bcrypt');
 const { hashPassword } = require('../utils/helpers')
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer')
+const Mailgen = require('mailgen'); //use to structure your mail the way you want
+require('dotenv').config();
+
+exports.registerMail = async (req, res) => {
+  const {userEmail} = req.body
+
+// let testAccount = await nodemailer.createTestAccount();
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   // service: "gmail",
+//   port: 465,  // Use port 465 for SSL (secure)
+//   secure: true, // true for 465, false for other ports
+//   auth: {
+//       // user: process.env.AUTH_EMAIL, // Your Gmail email
+//       // pass: process.env.AUTH_PASS, // App password, not your regular Gmail password
+//       user: testAccount.user, // Your Gmail email
+//       pass: testAccount.pass,
+//     }
+// });
+// let message = {
+//   from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>', // sender address
+//   to: "bar@example.com, baz@example.com", // list of receivers
+//   subject: "Hello ✔", // Subject line
+//   text: "Hello world?", // plain text body
+//   html: "<b>Hello world?</b>", // html body
+// };
+
+// transporter.sendMail(message).then((info)=>{
+//   return res.status(201).json({msg : "You should receive an email", info : info.messageId,
+//     preview: nodemailer.getTestMessageUrl(info)
+//   }).catch(error =>{
+//     return res.status(500).json({error})
+//   })
+// })
+
+let config = {
+  service: 'gmail',
+  auth:{
+     user: process.env.AUTH_EMAIL, 
+    pass: process.env.AUTH_PASS, 
+    // user: "odunuyiadeolu@gmail.com",
+    // pass: "vruuamhrpfewzlzl"
+  }
+}
+
+let transporter = nodemailer.createTransport(config)
+let MailGenerator = new Mailgen({
+  theme: "default",
+  product : {
+      name: "Mailgen",
+      link : 'https://mailgen.js/'
+  }
+})
+
+let response = {
+  body: {
+      name : "Daily Tuition",
+      intro: "Your bill has arrived!",
+      table : {
+          data : [
+              {
+                  item : "Nodemailer Stack Book",
+                  description: "A Backend application",
+                  price : "$10.99",
+              }
+          ]
+      },
+      outro: "Looking forward to do more business"
+  }
+}
+let mail = MailGenerator.generate(response)
+
+let message = {
+  from : process.env.AUTH_EMAIL,
+  // from: "odunuyiadeolu@gmail.com",
+  to : userEmail,
+  subject: "Place Order",
+  html: mail
+}
+transporter.sendMail(message)
+  .then(() => {
+    return res.status(201).json({ msg: "You should receive an email" });
+  })
+  .catch(error => {
+    console.error("Error occurred while sending email:", error); // Log the error details
+    return res.status(500).json({ error });
+  });
+
+}
+
 
 
 exports.registerUser = async (req, res) => {
