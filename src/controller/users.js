@@ -67,8 +67,8 @@ let MailGenerator = new Mailgen({
 
 let response = {
   body: {
-      name : "Daily Tuition",
-      intro: "Your bill has arrived!",
+      name : "Nova Bank",
+      intro: "You Transaction!",
       table : {
           data : [
               {
