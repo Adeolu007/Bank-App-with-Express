@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const TransactionSchema = new mongoose.Schema({
     transactionType: {
     type: String,
-    required: [true, 'Must provide transaction type'],
+   // required: [true, 'Must provide transaction type'],
     trim: true,
     maxlength: [10, 'Transaction type cannot be more than 10 characters'],
   },
@@ -13,7 +13,7 @@ const TransactionSchema = new mongoose.Schema({
   },
   accountNumber: {
     type: String,
-    required: [true, 'Must provide account number'],
+   // required: [true, 'Must provide account number'],
     trim: true,
     length: [10, 'Account number must be exactly 10 digits'],
     match: [/^\d{10}$/, 'Account number must be exactly 10 digits'],
@@ -23,6 +23,12 @@ const TransactionSchema = new mongoose.Schema({
     required: [true, 'Must provide account balance'],
     min: [0, 'Account balance cannot be negative'],
   },
+  email: {
+  //  type: mongoose.Schema.Types.Mixed,
+},
+paystack_ref: {
+    type: String,
+},
 });
 
 module.exports = mongoose.model('Transaction', TransactionSchema);

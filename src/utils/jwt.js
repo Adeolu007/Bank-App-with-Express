@@ -14,7 +14,9 @@ function authJwt(){
         path: [
             '/api/v1/users/login', 
             '/api/v1/users',
-            '/api/v1/users/gmail'
+            '/api/v1/users/gmail',
+            '/api/v1/paystack',
+            '/api/v1/verify-transaction'
         ]
     });
     async function isRevoked(req, payload, done) {

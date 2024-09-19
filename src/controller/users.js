@@ -1,4 +1,3 @@
-
 const RegisterUserDTO = require('../dtos/RegisterUserDTO');
 const User = require('../models/users');
 const Transaction = require('../models/transaction');
@@ -11,93 +10,53 @@ const bcrypt = require('bcrypt');
 const { hashPassword } = require('../utils/helpers')
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
-const Mailgen = require('mailgen'); //use to structure your mail the way you want
+const Mailgen = require('mailgen');
 require('dotenv').config();
+const transporter = require('../utils/mailer');
+const https = require('https');
 
 exports.registerMail = async (req, res) => {
-  const {userEmail} = req.body
-
-// let testAccount = await nodemailer.createTestAccount();
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   // service: "gmail",
-//   port: 465,  // Use port 465 for SSL (secure)
-//   secure: true, // true for 465, false for other ports
-//   auth: {
-//       // user: process.env.AUTH_EMAIL, // Your Gmail email
-//       // pass: process.env.AUTH_PASS, // App password, not your regular Gmail password
-//       user: testAccount.user, // Your Gmail email
-//       pass: testAccount.pass,
-//     }
-// });
-// let message = {
-//   from: '"Maddison Foo Koch 👻" <maddison53@ethereal.email>', // sender address
-//   to: "bar@example.com, baz@example.com", // list of receivers
-//   subject: "Hello ✔", // Subject line
-//   text: "Hello world?", // plain text body
-//   html: "<b>Hello world?</b>", // html body
-// };
-
-// transporter.sendMail(message).then((info)=>{
-//   return res.status(201).json({msg : "You should receive an email", info : info.messageId,
-//     preview: nodemailer.getTestMessageUrl(info)
-//   }).catch(error =>{
-//     return res.status(500).json({error})
-//   })
-// })
-
-let config = {
-  service: 'gmail',
-  auth:{
-     user: process.env.AUTH_EMAIL, 
-    pass: process.env.AUTH_PASS, 
-    // user: "odunuyiadeolu@gmail.com",
-    // pass: "vruuamhrpfewzlzl"
-  }
-}
-
-let transporter = nodemailer.createTransport(config)
-let MailGenerator = new Mailgen({
-  theme: "default",
-  product : {
+  const { userEmail } = req.body
+  let MailGenerator = new Mailgen({
+    theme: "default",
+    product: {
       name: "Mailgen",
-      link : 'https://mailgen.js/'
-  }
-})
+      link: 'https://mailgen.js/'
+    }
+  })
 
-let response = {
-  body: {
-      name : "Nova Bank",
+  let response = {
+    body: {
+      name: "Nova Bank",
       intro: "You Transaction!",
-      table : {
-          data : [
-              {
-                  item : "Nodemailer Stack Book",
-                  description: "A Backend application",
-                  price : "$10.99",
-              }
-          ]
+      table: {
+        data: [
+          {
+            item: "Nodemailer Stack Book",
+            description: "A Backend application",
+            price: "$10.99",
+          }
+        ]
       },
       outro: "Looking forward to do more business"
+    }
   }
-}
-let mail = MailGenerator.generate(response)
+  let mail = MailGenerator.generate(response)
 
-let message = {
-  from : process.env.AUTH_EMAIL,
-  // from: "odunuyiadeolu@gmail.com",
-  to : userEmail,
-  subject: "Place Order",
-  html: mail
-}
-transporter.sendMail(message)
-  .then(() => {
-    return res.status(201).json({ msg: "You should receive an email" });
-  })
-  .catch(error => {
-    console.error("Error occurred while sending email:", error); // Log the error details
-    return res.status(500).json({ error });
-  });
+  let message = {
+    from: process.env.AUTH_EMAIL,
+    to: userEmail,
+    subject: "Place Order",
+    html: mail
+  }
+  transporter.sendMail(message)
+    .then(() => {
+      return res.status(201).json({ msg: "You should receive an email" });
+    })
+    .catch(error => {
+      console.error("Error occurred while sending email:", error);
+      return res.status(500).json({ error });
+    });
 
 }
 
@@ -130,7 +89,19 @@ exports.registerUser = async (req, res) => {
       { new: true }
     );
     const updatedUser = await User.findById(newUser._id);
-    console.log(updatedUser)
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: updatedUser.email,
+      subject: "Registration Successful",
+      html: `<p>Dear ${updatedUser.firstName}, your account has been successfully created. Your account number is ${updatedUser.accountNumber}.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(message);
+    } catch (error) {
+      console.error("Error sending registration email:", error);
+    }
+
     res.status(201).json(updatedUser);
 
   } catch (error) {
@@ -184,6 +155,20 @@ exports.UpdateUser = async (req, res) => {
       return res.status(404).json({ message: 'User update failed' });
     }
 
+    // Send update email notification
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: updatedUser.email,
+      subject: "Profile Updated",
+      html: `<p>Dear ${updatedUser.firstName}, your profile has been updated successfully.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(message);
+    } catch (error) {
+      console.error("Error sending update email:", error);
+    }
+
     res.status(200).json({ message: 'User updated successfully', user: updatedUser });
 
   } catch (error) {
@@ -213,6 +198,19 @@ exports.balanceEnquiry = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     const balance = user.accountBalance;
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: user.email,
+      subject: "Balance Enquiry",
+      html: `<p>Dear ${user.firstName}, your current account balance is ${balance}.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(message);
+    } catch (error) {
+      console.error("Error sending balance enquiry email:", error);
+    }
+
     res.status(200).json({ message: 'Balance enquiry successful', balance });
 
   } catch (error) {
@@ -252,6 +250,20 @@ exports.creditAccount = async (req, res) => {
     });
     user.accountBalance += amount;
     const updatedUser = await user.save();
+    // Send credit notification email
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: user.email,
+      subject: "Account Credited",
+      html: `<p>Dear ${user.firstName}, your account has been credited with ${amount}. Your new balance is ${updatedUser.accountBalance}.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(message);
+    } catch (error) {
+      console.error("Error sending credit notification email:", error);
+    }
+
     res.status(200).json({
       message: 'Credit successful',
       newBalance: updatedUser.accountBalance,
@@ -282,6 +294,20 @@ exports.debitAccount = async (req, res) => {
     });
     user.accountBalance -= amount;
     const updatedUser = await user.save();
+    // Send debit notification email
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: user.email,
+      subject: "Account Debited",
+      html: `<p>Dear ${user.firstName}, your account has been debited by ${amount}. Your new balance is ${updatedUser.accountBalance}.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(message);
+    } catch (error) {
+      console.error("Error sending debit notification email:", error);
+    }
+
     res.status(200).json({
       message: 'Debit successful',
       newBalance: updatedUser.accountBalance,
@@ -297,20 +323,14 @@ exports.debitAccount = async (req, res) => {
 exports.transferBetweenAccount = async (req, res) => {
   try {
     const { senderAccountNumber, receiverAccountNumber, amount } = req.body;
-
-    // Find the sender by account number
     const sender = await User.findOne({ accountNumber: senderAccountNumber });
     if (!sender) {
       return res.status(404).json({ message: 'Sender not found' });
     }
-
-    // Find the receiver by account number
     const receiver = await User.findOne({ accountNumber: receiverAccountNumber });
     if (!receiver) {
       return res.status(404).json({ message: 'Receiver not found' });
     }
-
-    // Check if the sender has enough balance
     if (sender.accountBalance < amount) {
       return res.status(400).json({ message: 'Sender has insufficient balance' });
     }
@@ -331,6 +351,29 @@ exports.transferBetweenAccount = async (req, res) => {
       amount,
       userId: receiver._id
     });
+
+    // Send transfer notification emails
+    const senderMessage = {
+      from: process.env.AUTH_EMAIL,
+      to: sender.email,
+      subject: "Transfer Made",
+      html: `<p>Dear ${sender.firstName}, you have transferred ${amount} to account number ${receiverAccountNumber}. Your new balance is ${updatedSender.accountBalance}.</p>`,
+    };
+
+    const receiverMessage = {
+      from: process.env.AUTH_EMAIL,
+      to: receiver.email,
+      subject: "Transfer Received",
+      html: `<p>Dear ${receiver.firstName}, you have received ${amount} from account number ${senderAccountNumber}. Your new balance is ${updatedReceiver.accountBalance}.</p>`,
+    };
+
+    try {
+      await transporter.sendMail(senderMessage);
+      await transporter.sendMail(receiverMessage);
+    } catch (error) {
+      console.error("Error sending transfer notification emails:", error);
+    }
+
     res.status(200).json({
       message: 'Transfer successful',
       senderBalance: updatedSender.accountBalance,
@@ -359,8 +402,88 @@ exports.login = async (req, res) => {
       secret,
       { expiresIn: '1d' }
     )
-    res.status(200).send({ user: user.email, token: token })
+    const message = {
+      from: process.env.AUTH_EMAIL,
+      to: user.email,
+      subject: "Login Notification",
+      html: `<p>Dear ${user.firstName}, you have successfully logged in.</p>`,
+    };
+
+    await transporter.sendMail(message)
+      .catch(error => console.error("Error sending login email:", error));
+
+    res.status(200).send({ user: user.email, token: token });
   } else {
-    res.status(400).send('password is wrong')
+    res.status(400).send('Password is incorrect');
   }
-}
+};
+
+exports.paystack = async (req, res) => {
+  const https = require('https');
+  const { email, amount } = req.body;
+
+  const params = JSON.stringify({
+    email: email,
+    amount: amount,
+  });
+
+  const options = {
+    hostname: 'api.paystack.co',
+    port: 443,
+    path: '/transaction/initialize',
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const reqPaystack = https.request(options, (resPaystack) => {
+    let data = '';
+
+    resPaystack.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    resPaystack.on('end', () => {
+      res.send(JSON.parse(data)); // Send parsed JSON response
+      console.log(JSON.parse(data));
+    });
+  }).on('error', (error) => {
+    console.error(error);
+    res.status(500).send({ error: 'Error verifying transaction' });
+  });
+
+  reqPaystack.write(params);
+  reqPaystack.end();
+};
+
+exports.paystackVerify = (req, res) => {
+  const reference = req.query.reference; // Get the reference from query parameters
+
+  const options = {
+    hostname: 'api.paystack.co',
+    port: 443,
+    path: `/transaction/verify/${reference}`,
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+    }
+  };
+
+  https.request(options, response => {
+    let data = '';
+
+    response.on('data', chunk => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      res.json(JSON.parse(data)); // Send the response back to the client
+    });
+  }).on('error', error => {
+    console.error(error);
+    res.status(500).send('Error verifying transaction');
+  }).end();
+};
+

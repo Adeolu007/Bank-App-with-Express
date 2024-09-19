@@ -2,7 +2,7 @@ const {Router } = require ("express");
 const { query, validationResult, body, matchedData, checkSchema } = require('express-validator');
 const { createUserValidationSchema } = require('../utils/validationSchemas');
 const { validateRegisterUser } = require('../middleware/validationMiddleware');
-const {registerUser, getAllUsers, getSingleUser, UpdateUser, deleteUser, balanceEnquiry, nameEnquiry, creditAccount, debitAccount, transferBetweenAccount, login, registerMail} = require('../controller/users');
+const {registerUser, getAllUsers, getSingleUser, UpdateUser, deleteUser, balanceEnquiry, nameEnquiry, creditAccount, debitAccount, transferBetweenAccount, login, registerMail, paystack, paystackVerify} = require('../controller/users');
 
 const router = Router();
 
@@ -18,6 +18,7 @@ router.post("/users/debit", debitAccount)
 router.post("/users/transfer_between_account", transferBetweenAccount) 
 router.post("/users/login", login)
 router.post("/users/gmail",registerMail)
-
+router.post("/paystack", paystack)
+router.get('/verify-transaction',paystackVerify) 
 
 module.exports = router

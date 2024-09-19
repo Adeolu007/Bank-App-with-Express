@@ -1,5 +1,6 @@
 const User = require('../models/users');
 const Transaction = require('../models/transaction');
+require('dotenv').config();
 
 
 exports.getAllTransaction = async (req, res) => {
