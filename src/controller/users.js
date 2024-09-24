@@ -479,7 +479,7 @@ exports.paystackVerify = (req, res) => {
     });
 
     response.on('end', () => {
-      res.json(JSON.parse(data)); // Send the response back to the client
+    res.json(JSON.parse(data)); // Send the response back to the client
     });
   }).on('error', error => {
     console.error(error);
@@ -487,3 +487,26 @@ exports.paystackVerify = (req, res) => {
   }).end();
 };
 
+exports.changePassword = async (req, res) => {
+  const { id, password, newPassword } = req.body;
+
+  try {
+      const user = await User.findById(id);
+      if (!user) {
+          return res.status(404).json({ status: "failed", message: "User not found" });
+      }
+
+      const verified = await bcrypt.compare(password, user.password);
+      if (!verified) {
+          return res.status(400).json({ status: "failed", message: "Invalid current password" });
+      }
+
+      // Hashing the new password before saving
+      user.password = await bcrypt.hash(newPassword, 10); 
+      await user.save();
+
+      res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+      res.status(500).json({ status: "failed", message: "Internal server error", error: error.message });
+  }
+};
