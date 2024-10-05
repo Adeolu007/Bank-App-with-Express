@@ -1,7 +1,7 @@
 const { expressjwt } = require('express-jwt');
 require('dotenv').config();
 
-function authJwt(){
+function authJwt() {
     const secret = process.env.ACCESS_TOKEN_SECRET
     if (!secret) {
         throw new Error('Missing secret. Please set the secret environment variable.');
@@ -12,7 +12,7 @@ function authJwt(){
         isRevoked: isRevoked
     }).unless({
         path: [
-            '/api/v1/users/login', 
+            '/api/v1/users/login',
             '/api/v1/users',
             '/api/v1/users/gmail',
             '/api/v1/paystack',
@@ -21,11 +21,11 @@ function authJwt(){
         ]
     });
     async function isRevoked(req, payload, done) {
-        console.log(payload); 
-        if(payload.isAdmin == false) {
+        console.log(payload);
+        if (payload.isAdmin == false) {
             return true;
         }
-    
+
         console.log('Admin');
         return false;
     }

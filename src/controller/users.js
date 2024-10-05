@@ -96,10 +96,10 @@ exports.registerUser = async (req, res) => {
       { $set: { accountBalance: 0, accountNumber } },
       { new: true }
     );
-    
+
     const updatedUser = await User.findById(newUser._id);
 
-    
+
 
     const message = {
       from: process.env.AUTH_EMAIL,
@@ -121,21 +121,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// exports.getAllUsers = async (req, res) => {
-//   try {
-//     const userDTOs = []
-//     const users = await User.find();
-//     redisClient.get('users', async (error, user)=>{
-//       if(error) console.log(error)
-//         if (user !=null){
-//           return res.json(JSON.parse(user))
-//         }else {
-//            userDTOs = users.map(user => new UserDTO(user));
-//           await redisClient.setEx(`users`, DEFAULT_EXPIRATION, JSON.stringify(userDTOs));
-//         }})
-//     res.status(200).json(userDTOs);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });}}
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -195,7 +180,7 @@ exports.UpdateUser = async (req, res) => {
     const message = {
       from: process.env.AUTH_EMAIL,
       to: updatedUser.email,
-      subject: "Profile Updated",
+      subject: "Email Notififcation",
       html: `<p>Dear ${updatedUser.firstName}, your profile has been updated successfully.</p>`,
     };
 
@@ -495,7 +480,7 @@ exports.paystack = async (req, res) => {
 };
 
 exports.paystackVerify = (req, res) => {
-  const reference = req.query.reference; // Get the reference from query parameters
+  const reference = req.query.reference;
 
   const options = {
     hostname: 'api.paystack.co',
@@ -515,7 +500,7 @@ exports.paystackVerify = (req, res) => {
     });
 
     response.on('end', () => {
-    res.json(JSON.parse(data)); // Send the response back to the client
+      res.json(JSON.parse(data));
     });
   }).on('error', error => {
     console.error(error);
@@ -527,22 +512,22 @@ exports.changePassword = async (req, res) => {
   const { id, password, newPassword } = req.body;
 
   try {
-      const user = await User.findById(id);
-      if (!user) {
-          return res.status(404).json({ status: "failed", message: "User not found" });
-      }
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ status: "failed", message: "User not found" });
+    }
 
-      const verified = await bcrypt.compare(password, user.password);
-      if (!verified) {
-          return res.status(400).json({ status: "failed", message: "Invalid current password" });
-      }
+    const verified = await bcrypt.compare(password, user.password);
+    if (!verified) {
+      return res.status(400).json({ status: "failed", message: "Invalid current password" });
+    }
 
-      // Hashing the new password before saving
-      user.password = await bcrypt.hash(newPassword, 10); 
-      await user.save();
+    // Hashing the new password before saving
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
 
-      res.status(200).json({ message: "Password changed successfully" });
+    res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
-      res.status(500).json({ status: "failed", message: "Internal server error", error: error.message });
+    res.status(500).json({ status: "failed", message: "Internal server error", error: error.message });
   }
 };

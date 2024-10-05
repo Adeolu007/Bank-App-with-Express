@@ -7,13 +7,12 @@ const transaction = require('./routes/transactions')
 const mongoose = require('mongoose');
 const authJwt = require('./utils/jwt');
 const { expressjwt } = require('express-jwt');
-// const Redis = require('redis')
-// const redisClient = Redis.createClient()
-
-// const DEFAULT_EXPIRATION = 3600
+const setupSwagger = require('./utils/swagger');
 require('dotenv').config();
 
 app.use(express.json());
+setupSwagger(app);
+
 app.use(authJwt());
 app.use('/api/v1', user)
 app.use('/api/v1', transaction)
@@ -21,14 +20,14 @@ const PORT = process.env.PORT || 3000;
 
 // // Connect to MongoDB
 mongoose.connect(process.env.CONNECTION_STRING)
-.then(() => {
-    console.log('Database connection is ready');
-})
-.catch((error) => {
-    console.error('Connection to MongoDB failed:', error);
-});
+    .then(() => {
+        console.log('Database connection is ready');
+    })
+    .catch((error) => {
+        console.error('Connection to MongoDB failed:', error);
+    });
 
-app.listen(PORT, ()=> {
+app.listen(PORT, () => {
     console.log(`Running on Port ${PORT}`)
 })
 

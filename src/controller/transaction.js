@@ -19,8 +19,7 @@ exports.getAllTransaction = async (req, res) => {
 exports.getByAccountNumber = async (req, res) => {
     try {
         const { accountNumber } = req.params;
-        const transactions = await Transaction.find({ accountNumber }).select('-_id -userId'); // Exclude _id and userId from results
-
+        const transactions = await Transaction.find({ accountNumber }).select('-_id -userId');
         if (transactions.length === 0) {
             return res.status(404).json({ message: 'No transactions found for this account number' });
         }

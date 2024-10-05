@@ -1,6 +1,5 @@
-// utils/mailer.js
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
 // Nodemailer transport configuration
 const transporter = nodemailer.createTransport({
@@ -11,5 +10,4 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Export the transporter to be used in other files
 module.exports = transporter;

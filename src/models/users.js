@@ -20,15 +20,12 @@ const UserSchema = new mongoose.Schema({
   },
   accountNumber: {
     type: String,
-    // required: [true, 'Must provide account number'],
     trim: true,
     length: [10, 'Account number must be exactly 10 digits'],
     match: [/^\d{10}$/, 'Account number must be exactly 10 digits'],
   },
   accountBalance: {
     type: Number,
-    // required: [true, 'Must provide account balance'],
-    // min: [0, 'Account balance cannot be negative'],
   },
   phoneNumber: {
     type: Number,
@@ -56,7 +53,6 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Must provide gender'],
     trim: true,
-    // enum: ['male', 'female', 'other'], // Adjust as needed
   },
   address: {
     type: String,
@@ -94,7 +90,7 @@ const UserSchema = new mongoose.Schema({
   isAdmin: {
     type: Boolean,
     default: true,
-},
+  },
 });
 
 module.exports = mongoose.model('User', UserSchema);
