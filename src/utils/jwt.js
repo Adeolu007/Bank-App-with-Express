@@ -17,7 +17,7 @@ function authJwt(){
             '/api/v1/users/gmail',
             '/api/v1/paystack',
             '/api/v1/verify-transaction',
-            '/api/v1/users'
+            // '/api/v1/users'
         ]
     });
     async function isRevoked(req, payload, done) {
