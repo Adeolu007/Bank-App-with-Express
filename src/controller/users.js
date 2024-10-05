@@ -14,6 +14,14 @@ const Mailgen = require('mailgen');
 require('dotenv').config();
 const transporter = require('../utils/mailer');
 const https = require('https');
+const Redis = require('redis')
+const redisClient = Redis.createClient()
+
+redisClient.connect().catch(err => {
+  console.error('Redis connection error:', err);
+});
+
+const DEFAULT_EXPIRATION = 3600
 
 exports.registerMail = async (req, res) => {
   const { userEmail } = req.body
@@ -88,7 +96,11 @@ exports.registerUser = async (req, res) => {
       { $set: { accountBalance: 0, accountNumber } },
       { new: true }
     );
+    
     const updatedUser = await User.findById(newUser._id);
+
+    
+
     const message = {
       from: process.env.AUTH_EMAIL,
       to: updatedUser.email,
@@ -109,15 +121,39 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+// exports.getAllUsers = async (req, res) => {
+//   try {
+//     const userDTOs = []
+//     const users = await User.find();
+//     redisClient.get('users', async (error, user)=>{
+//       if(error) console.log(error)
+//         if (user !=null){
+//           return res.json(JSON.parse(user))
+//         }else {
+//            userDTOs = users.map(user => new UserDTO(user));
+//           await redisClient.setEx(`users`, DEFAULT_EXPIRATION, JSON.stringify(userDTOs));
+//         }})
+//     res.status(200).json(userDTOs);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });}}
+
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
-    const userDTOs = users.map(user => new UserDTO(user));
-    res.status(200).json(userDTOs);
+    const cachedUsers = await redisClient.get('users');
+    if (cachedUsers) {
+      return res.json(JSON.parse(cachedUsers));
+    } else {
+      const users = await User.find();
+      const userDTOs = users.map(user => new UserDTO(user));
+      await redisClient.setEx('users', DEFAULT_EXPIRATION, JSON.stringify(userDTOs));
+      return res.status(200).json(userDTOs);
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
-}
+};
+
 
 exports.getSingleUser = async (req, res) => {
   try {

@@ -7,6 +7,10 @@ const transaction = require('./routes/transactions')
 const mongoose = require('mongoose');
 const authJwt = require('./utils/jwt');
 const { expressjwt } = require('express-jwt');
+// const Redis = require('redis')
+// const redisClient = Redis.createClient()
+
+// const DEFAULT_EXPIRATION = 3600
 require('dotenv').config();
 
 app.use(express.json());

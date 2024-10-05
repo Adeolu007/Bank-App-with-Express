@@ -24,7 +24,8 @@
     "mailgen": "^2.0.28",
     "mongodb": "^6.8.1",
     "mongoose": "^8.6.2",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.9.15",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.13",
